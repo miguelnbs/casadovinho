@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Casa do Vinho | Carta de Vinhos 2025</title>
+    <meta
+      name="description"
+      content="Carta de vinhos Casa do Vinho 2025 organizada por pais, tipo, uva e produtor."
+    />
+    <link rel="icon" href="assets/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="assets/logo-casa-do-vinho.jpg" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="wines-data.js" defer></script>
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <header class="hero" id="top">
+      <div class="hero__inner">
+        <div class="hero__brand">
+          <img src="assets/logo-casa-do-vinho.jpg" alt="Casa do Vinho" />
+          <div>
+            <p class="eyebrow">Carta oficial</p>
+            <strong>Casa do Vinho</strong>
+          </div>
+        </div>
+        <h1>Carta de Vinhos 2025</h1>
+        <p class="hero__copy">
+          Seleção organizada por país, com ficha técnica completa, uvas,
+          regiões, temperatura ideal e notas de prova extraídas da carta.
+        </p>
+        <div class="hero__meta" aria-label="Resumo da carta">
+          <span><strong id="total-wines">0</strong> vinhos</span>
+          <span><strong id="total-countries">0</strong> países</span>
+          <a
+            class="hero__instagram"
+            href="https://www.instagram.com/casadovinhobsb_oficial/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Instagram da loja
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <nav class="toolbar" aria-label="Filtros da carta">
+      <div class="toolbar__inner">
+        <label class="search">
+          <span class="sr-only">Buscar vinho, uva ou produtor</span>
+          <input
+            id="search-input"
+            type="search"
+            autocomplete="off"
+            placeholder="Buscar vinho, uva, produtor ou região"
+          />
+        </label>
+
+        <div class="filter-row" aria-label="Países" id="country-filters"></div>
+        <div class="filter-row filter-row--types" aria-label="Tipos" id="type-filters"></div>
+      </div>
+    </nav>
+
+    <main>
+      <section class="summary-band" aria-label="Resumo filtrado">
+        <div class="summary-band__inner">
+          <p id="result-summary"></p>
+        </div>
+      </section>
+      <div id="wine-sections" class="wine-sections"></div>
+      <section class="contact-section" aria-label="Contato da loja">
+        <div class="contact-section__inner">
+          <img src="assets/logo-casa-do-vinho.jpg" alt="Casa do Vinho" />
+          <div>
+            <p class="eyebrow">Atendimento</p>
+            <h2>Casa do Vinho BSB</h2>
+            <p>
+              Para reservas, dúvidas sobre rótulos e disponibilidade, fale com a loja pelo
+              Instagram oficial.
+            </p>
+          </div>
+          <a
+            href="https://www.instagram.com/casadovinhobsb_oficial/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            @casadovinhobsb_oficial
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer__brand">
+        <img src="assets/logo-casa-do-vinho.jpg" alt="Casa do Vinho" />
+        <div>
+          <strong>Casa do Vinho</strong>
+          <span>Contato: @casadovinhobsb_oficial</span>
+        </div>
+      </div>
+      <div class="footer__links">
+        <a
+          href="https://www.instagram.com/casadovinhobsb_oficial/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Abrir Instagram
+        </a>
+        <a href="#top" id="back-to-top">Voltar ao topo</a>
+      </div>
+    </footer>
+
+    <dialog class="wine-dialog" id="wine-dialog" aria-labelledby="dialog-title">
+      <div class="wine-dialog__panel">
+        <button class="wine-dialog__close" id="dialog-close" type="button">
+          Fechar
+        </button>
+        <div class="wine-dialog__layout">
+          <section class="wine-dialog__media" aria-label="Imagens do vinho">
+            <div class="wine-dialog__main-image">
+              <img id="dialog-main-image" alt="" />
+            </div>
+            <div class="dialog-thumbs" id="dialog-thumbs" aria-label="Selecionar imagem"></div>
+          </section>
+          <section class="wine-dialog__content">
+            <div class="wine-dialog__meta" id="dialog-meta"></div>
+            <h2 id="dialog-title"></h2>
+            <p class="dialog-variant" id="dialog-variant"></p>
+            <dl class="dialog-facts" id="dialog-facts"></dl>
+            <div class="dialog-details" id="dialog-details"></div>
+          </section>
+        </div>
+      </div>
+    </dialog>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+.vercel
+_tools/
+_deploy_logs/
+_audit/
+.edge*/
+.wrangler/
+.env
+.env.*
+node_modules/
+dist/
+*.log
+_server-*.log
+.DS_Store
