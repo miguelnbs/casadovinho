@@ -25,6 +25,7 @@ const els = {
   backToTop: document.querySelector("#back-to-top"),
   dialog: document.querySelector("#wine-dialog"),
   dialogClose: document.querySelector("#dialog-close"),
+  dialogImageLink: document.querySelector("#dialog-image-link"),
   dialogMainImage: document.querySelector("#dialog-main-image"),
   dialogThumbs: document.querySelector("#dialog-thumbs"),
   dialogMeta: document.querySelector("#dialog-meta"),
@@ -35,6 +36,7 @@ const els = {
 };
 
 const winesById = new Map(data.wines.map((wine) => [wine.id, wine]));
+const wineImageRoles = new Set(["garrafa"]);
 
 function normalize(value) {
   return String(value || "")
@@ -147,6 +149,53 @@ function imageAlt(prefix, image) {
   return `${prefix} - ${image.role || "imagem"}`;
 }
 
+function imageRatio(image) {
+  return image?.width && image?.height ? image.width / image.height : 1;
+}
+
+function isBottleLikeImage(image) {
+  return wineImageRoles.has(image?.role) || imageRatio(image) <= 0.42;
+}
+
+function imagePriority(image) {
+  if (!image) return 0;
+  if (wineImageRoles.has(image.role)) return 5;
+  if (image.role === "imagem do PDF" && isBottleLikeImage(image)) return 4;
+  if (image.role === "imagem do PDF") return 3;
+  if (image.role === "selo ou icone") return 2;
+  if (image.role === "faixa ou logotipo") return 1;
+  return 0;
+}
+
+function imageKind(image) {
+  const ratio = imageRatio(image);
+  if (isBottleLikeImage(image)) return "bottle";
+  if (ratio >= 1.35) return "wide";
+  if (ratio <= 0.75) return "tall";
+  return "standard";
+}
+
+function getPrimaryImage(wine) {
+  const images = wine.images || [];
+  const savedPrimary = images.find((image) => image.src === wine.primaryImage);
+  const bestImage = images
+    .slice()
+    .sort((a, b) => imagePriority(b) - imagePriority(a))[0];
+
+  if (!savedPrimary) return bestImage || images[0] || null;
+  if (!bestImage) return savedPrimary;
+  return imagePriority(bestImage) >= 4 && imagePriority(bestImage) > imagePriority(savedPrimary)
+    ? bestImage
+    : savedPrimary;
+}
+
+function getDialogImages(wine) {
+  const images = wine.images || [];
+  const primary = getPrimaryImage(wine);
+  if (!primary) return [];
+  return [primary, ...images.filter((image) => image.src !== primary.src)];
+}
+
 function makeImage(src, alt, loading = "lazy") {
   const img = document.createElement("img");
   img.src = src;
@@ -209,11 +258,13 @@ function makeCard(wine) {
 
   const body = document.createElement("div");
   body.className = "wine-card__body";
+  const primaryImage = getPrimaryImage(wine);
 
-  if (wine.primaryImage) {
+  if (primaryImage) {
     const media = document.createElement("div");
     media.className = "wine-card__image";
-    media.append(makeImage(wine.primaryImage, `Imagem do vinho ${wine.name}`, "eager"));
+    media.dataset.imageKind = imageKind(primaryImage);
+    media.append(makeImage(primaryImage.src, `Imagem do vinho ${wine.name}`, "eager"));
     body.append(media);
   }
 
@@ -261,16 +312,51 @@ function makeCard(wine) {
 
 function selectDialogImage(wine, image) {
   if (!image) {
+    els.dialogImageLink.removeAttribute("href");
+    els.dialogImageLink.setAttribute("aria-disabled", "true");
     els.dialogMainImage.removeAttribute("src");
+    els.dialogMainImage.removeAttribute("width");
+    els.dialogMainImage.removeAttribute("height");
     els.dialogMainImage.alt = "";
     return;
   }
 
+  els.dialogImageLink.href = image.src;
+  els.dialogImageLink.removeAttribute("aria-disabled");
+  els.dialogImageLink.dataset.imageKind = imageKind(image);
   els.dialogMainImage.src = image.src;
   els.dialogMainImage.alt = imageAlt(wine.name, image);
+  if (image.width && image.height) {
+    els.dialogMainImage.width = image.width;
+    els.dialogMainImage.height = image.height;
+  } else {
+    els.dialogMainImage.removeAttribute("width");
+    els.dialogMainImage.removeAttribute("height");
+  }
   [...els.dialogThumbs.querySelectorAll("button")].forEach((button) => {
     button.setAttribute("aria-current", String(button.dataset.src === image.src));
   });
+}
+
+function openDialogElement() {
+  if (typeof els.dialog.showModal === "function") {
+    if (!els.dialog.open) els.dialog.showModal();
+  } else {
+    els.dialog.classList.add("wine-dialog--fallback");
+    els.dialog.setAttribute("open", "");
+    document.body.classList.add("is-dialog-fallback-open");
+  }
+  document.body.classList.add("is-dialog-open");
+}
+
+function closeDialogElement() {
+  if (typeof els.dialog.close === "function" && els.dialog.open) {
+    els.dialog.close();
+  } else {
+    els.dialog.removeAttribute("open");
+  }
+  els.dialog.classList.remove("wine-dialog--fallback");
+  document.body.classList.remove("is-dialog-open", "is-dialog-fallback-open");
 }
 
 function addDialogDetail(detail) {
@@ -284,8 +370,8 @@ function addDialogDetail(detail) {
 }
 
 function openWineDialog(wine) {
-  const images = wine.images?.length ? wine.images : [];
-  const primary = images.find((image) => image.src === wine.primaryImage) || images[0];
+  const images = getDialogImages(wine);
+  const primary = images[0];
 
   els.dialog.style.setProperty("--accent", countryAccents[wine.country] || "#7c1f31");
   els.dialogMeta.replaceChildren();
@@ -319,6 +405,8 @@ function openWineDialog(wine) {
     button.className = "dialog-thumb";
     button.dataset.src = image.src;
     button.title = `${image.role} - ${image.width}x${image.height}`;
+    button.setAttribute("aria-label", `Selecionar ${image.role || "imagem"} de ${wine.name}`);
+    button.dataset.imageKind = imageKind(image);
     button.append(makeImage(image.src, imageAlt(wine.name, image)));
     button.addEventListener("click", () => selectDialogImage(wine, image));
     if (index === 0) button.setAttribute("aria-label", "Imagem principal");
@@ -326,7 +414,13 @@ function openWineDialog(wine) {
   });
 
   selectDialogImage(wine, primary);
-  els.dialog.showModal();
+  if (typeof els.dialogThumbs.scrollTo === "function") {
+    els.dialogThumbs.scrollTo({ left: 0, top: 0 });
+  } else {
+    els.dialogThumbs.scrollLeft = 0;
+    els.dialogThumbs.scrollTop = 0;
+  }
+  openDialogElement();
 }
 
 function renderSections(wines) {
@@ -407,13 +501,21 @@ els.backToTop.addEventListener("click", (event) => {
 
 els.sections.addEventListener("click", handleCardClick);
 
-els.dialogClose.addEventListener("click", () => {
-  els.dialog.close();
-});
+els.dialogClose.addEventListener("click", closeDialogElement);
 
 els.dialog.addEventListener("click", (event) => {
   if (event.target === els.dialog) {
-    els.dialog.close();
+    closeDialogElement();
+  }
+});
+
+els.dialog.addEventListener("close", () => {
+  document.body.classList.remove("is-dialog-open", "is-dialog-fallback-open");
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && els.dialog.hasAttribute("open")) {
+    closeDialogElement();
   }
 });
 

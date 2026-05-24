@@ -27,6 +27,19 @@ body {
   line-height: 1.5;
 }
 
+body.is-dialog-open {
+  overflow: hidden;
+}
+
+body.is-dialog-fallback-open::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(15, 16, 14, 0.72);
+  backdrop-filter: blur(4px);
+}
+
 button,
 input {
   font: inherit;
@@ -304,11 +317,11 @@ h1 {
 }
 
 .wine-card__image {
+  position: relative;
   height: 280px;
   display: grid;
   place-items: center;
   margin: -18px -18px 0;
-  padding: 22px;
   border-bottom: 1px solid var(--line);
   background:
     linear-gradient(135deg, rgba(33, 79, 61, 0.08), rgba(183, 131, 52, 0.08)),
@@ -316,11 +329,13 @@ h1 {
 }
 
 .wine-card__image img {
-  width: auto;
-  height: auto;
-  max-width: 92%;
-  max-height: 100%;
+  position: absolute;
+  inset: 22px;
+  width: calc(100% - 44px);
+  height: calc(100% - 44px);
+  display: block;
   object-fit: contain;
+  object-position: center;
 }
 
 .wine-card__body {
@@ -546,14 +561,32 @@ h1 {
 }
 
 .wine-dialog {
+  position: fixed;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
   width: min(1160px, calc(100% - 28px));
   max-width: none;
+  max-height: calc(100vh - 24px);
+  max-height: calc(100svh - 24px);
   max-height: calc(100dvh - 24px);
+  margin: 0;
   padding: 0;
   border: 0;
   border-radius: 8px;
   background: transparent;
   color: var(--ink);
+}
+
+.wine-dialog:not([open]) {
+  display: none;
+}
+
+.wine-dialog[open] {
+  display: block;
+}
+
+.wine-dialog--fallback {
+  z-index: 90;
 }
 
 .wine-dialog::backdrop {
@@ -568,6 +601,8 @@ h1 {
   border-radius: 8px;
   background: var(--paper);
   box-shadow: 0 28px 80px rgba(0, 0, 0, 0.35);
+  max-height: calc(100vh - 24px);
+  max-height: calc(100svh - 24px);
   max-height: calc(100dvh - 24px);
 }
 
@@ -589,15 +624,20 @@ h1 {
 .wine-dialog__layout {
   display: grid;
   grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.1fr);
+  max-height: calc(100vh - 24px);
+  max-height: calc(100svh - 24px);
   max-height: calc(100dvh - 24px);
 }
 
 .wine-dialog__media {
   min-height: 0;
-  height: calc(100dvh - 24px);
-  max-height: 840px;
+  height: 760px;
+  height: min(760px, calc(100vh - 24px));
+  height: min(760px, calc(100svh - 24px));
+  height: min(760px, calc(100dvh - 24px));
+  max-height: calc(100dvh - 24px);
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(360px, 1fr) auto;
   gap: 12px;
   padding: 24px;
   background:
@@ -606,27 +646,34 @@ h1 {
 }
 
 .wine-dialog__main-image {
+  position: relative;
   min-height: 0;
+  height: 100%;
   display: grid;
   place-items: center;
-  padding: 18px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
+  color: inherit;
+  cursor: zoom-in;
   overflow: hidden;
+  text-decoration: none;
+  touch-action: manipulation;
 }
 
 .wine-dialog__main-image img {
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  max-height: 100%;
+  position: absolute;
+  inset: 18px;
+  width: calc(100% - 36px);
+  height: calc(100% - 36px);
+  display: block;
   object-fit: contain;
+  object-position: center;
 }
 
 .dialog-thumbs {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
   gap: 8px;
   max-height: 156px;
   overflow: auto;
@@ -634,12 +681,14 @@ h1 {
 }
 
 .dialog-thumb {
-  height: 74px;
+  min-height: 74px;
+  aspect-ratio: 1 / 1;
   padding: 4px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .dialog-thumb[aria-current="true"] {
@@ -908,17 +957,59 @@ h1 {
   .wine-dialog {
     width: calc(100% - 16px);
     max-height: calc(100vh - 16px);
+    max-height: calc(100svh - 16px);
+    max-height: calc(100dvh - 16px);
+  }
+
+  .wine-dialog__panel {
+    max-height: calc(100vh - 16px);
+    max-height: calc(100svh - 16px);
+    max-height: calc(100dvh - 16px);
   }
 
   .wine-dialog__layout {
     grid-template-columns: 1fr;
     max-height: calc(100vh - 16px);
+    max-height: calc(100svh - 16px);
+    max-height: calc(100dvh - 16px);
     overflow: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .wine-dialog__media {
-    height: min(70vh, 560px);
+    height: auto;
     max-height: none;
+    grid-template-rows: auto auto;
+    gap: 10px;
+    padding: 14px;
+  }
+
+  .wine-dialog__main-image {
+    height: min(52vh, 410px);
+    height: min(52svh, 410px);
+    height: min(52dvh, 410px);
+    min-height: 260px;
+  }
+
+  .wine-dialog__main-image img {
+    inset: 12px;
+    width: calc(100% - 24px);
+    height: calc(100% - 24px);
+  }
+
+  .dialog-thumbs {
+    display: flex;
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 2px 3px 8px;
+    scroll-snap-type: x proximity;
+  }
+
+  .dialog-thumb {
+    flex: 0 0 68px;
+    min-height: 68px;
+    scroll-snap-align: start;
   }
 
   .wine-dialog__content {
